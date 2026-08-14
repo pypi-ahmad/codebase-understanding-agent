@@ -2,6 +2,8 @@
 
 A multi-agent Streamlit app that clones, scans, summarizes, and explains any codebase — then answers questions about it in a chat interface.
 
+Repository: [github.com/pypi-ahmad/codebase-understanding-agent](https://github.com/pypi-ahmad/codebase-understanding-agent)
+
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Streamlit](https://img.shields.io/badge/frontend-Streamlit-ff4b4b)
 ![LangGraph](https://img.shields.io/badge/orchestration-LangGraph-1c3c3c)
@@ -66,8 +68,8 @@ Double-click `run.cmd`. It runs `uv sync` to install/update dependencies, warns 
 ### Manual (any OS)
 
 ```bash
-git clone <this-repo-url>
-cd "Codebase Understanding Agent"
+git clone https://github.com/pypi-ahmad/codebase-understanding-agent.git
+cd codebase-understanding-agent
 uv sync
 ```
 
