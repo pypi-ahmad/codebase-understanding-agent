@@ -166,3 +166,5 @@ No license file is currently included in this repository. Add a `LICENSE` file (
 ## Acknowledgements
 
 Built with [Streamlit](https://streamlit.io/), [LangGraph](https://langchain-ai.github.io/langgraph/) / [LangChain](https://www.langchain.com/), and [GitPython](https://gitpython.readthedocs.io/).
+
+<p align="center">Made with ❤️ by Ahmad Mujtaba</p>
