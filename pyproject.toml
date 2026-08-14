@@ -1,0 +1,13 @@
+[project]
+name = "codebase-understanding-agent"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "gitpython>=3.1.59",
+    "langchain-core>=1.5.4",
+    "langchain-ollama>=1.1.0",
+    "langchain-openai>=1.5.0",
+    "langgraph>=1.2.11",
+    "python-dotenv>=1.2.2",
+    "streamlit>=1.61.1",
+]
