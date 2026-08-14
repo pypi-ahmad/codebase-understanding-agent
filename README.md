@@ -76,8 +76,10 @@ uv sync
 Set your credentials (see [Environment Variables](#environment-variables)), then run:
 
 ```bash
-uv run streamlit run app.py
+uv run streamlit run app.py --server.port 8541
 ```
+
+The app runs on **http://localhost:8541** (`run.cmd` uses the same port).
 
 ## Environment Variables
 
@@ -85,12 +87,15 @@ Copy `.env.example` to `.env` and fill in your values, **or** set these as real 
 
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
-| `OPENAI_API_KEY` | Yes | — | API key for the OpenAI-compatible endpoint. Never hardcoded; read from the environment only. |
+| `OPENAI_API_KEY` | If using the OpenAI provider | — | API key for the OpenAI-compatible endpoint. Never hardcoded; read from the environment only. |
 | `OPENAI_BASE_URL` | No | provider default | Base URL for an OpenAI-compatible endpoint (e.g. a proxy or alternate provider). |
-| `OPENAI_STRONG_MODEL` | No | `gpt-4o` | Model used for architecture explanation and hard questions. |
-| `OPENAI_FAST_MODEL` | No | `gpt-4o-mini` | Model used for file summaries and simple questions (when the fast provider is OpenAI). |
+| `OPENAI_STRONG_MODEL` | No | `gpt-4o` | Model used for architecture explanation and hard questions when the strong provider is OpenAI. |
+| `OPENAI_FAST_MODEL` | No | `gpt-4o-mini` | Model used for file summaries and simple questions when the fast provider is OpenAI. |
 | `OLLAMA_BASE_URL` | No | `http://localhost:11434` | Base URL of a local Ollama server, used when the fast provider is set to Ollama. |
 | `OLLAMA_MODEL` | No | `llama3.2` | Ollama model name for the fast tier. |
+| `AGNES_API_KEY` | If using the Agnes AI provider | — | API key for the Agnes AI OpenAI-compatible endpoint. Read from the environment only. |
+| `AGNES_MODEL` | No | `agnes-2.5-flash` | Model used (for either tier) when that tier's provider is Agnes AI. |
+| `AGNES_BASE_URL` | No | `https://apihub.agnes-ai.com/v1` | Base URL for the Agnes AI API. |
 
 All defaults and overrides can also be changed at runtime from the sidebar.
 
@@ -133,9 +138,10 @@ flowchart LR
 
 Available in the sidebar, all backed by `config.Settings`:
 
-- **Strong model** — OpenAI-compatible model name for architecture/hard Q&A.
-- **Fast model provider** — OpenAI or Ollama.
-- **Fast model name** — OpenAI model name, or Ollama model + base URL.
+- **Strong model provider** — OpenAI or Agnes AI (both OpenAI-compatible endpoints).
+- **Strong model name** — model to use for architecture/hard Q&A on the selected provider.
+- **Fast model provider** — OpenAI, Ollama, or Agnes AI.
+- **Fast model name** — model name for OpenAI/Agnes AI, or Ollama model + base URL.
 - **Temperature** — separate sliders for the strong and fast models.
 - **Max files to summarize** — caps how many key files the Summarizer processes.
 - **Keep cloned/extracted files after session** — skip automatic cleanup of temp directories.

@@ -30,18 +30,20 @@ def cleanup_previous(keep: bool) -> None:
 # ---- Sidebar: settings ----
 with st.sidebar:
     st.header("Settings")
-    strong_model = st.text_input("Strong model (OpenAI)", value=config.DEFAULT_STRONG_MODEL)
+    st.subheader("Strong model (architecture & hard Q&A)")
+    strong_provider_label = st.radio("Strong provider", ["OpenAI", "Agnes AI"], horizontal=True)
+    strong_provider = "agnes" if strong_provider_label == "Agnes AI" else "openai"
+    strong_model = st.text_input(
+        "Strong model",
+        value=config.DEFAULT_AGNES_MODEL if strong_provider == "agnes" else config.DEFAULT_STRONG_MODEL,
+    )
 
     st.divider()
     st.subheader("Fast model (summaries & simple Q&A)")
-    fast_provider_label = st.radio("Provider", ["OpenAI", "Ollama"], horizontal=True)
-    fast_provider = "ollama" if fast_provider_label == "Ollama" else "openai"
+    fast_provider_label = st.radio("Fast provider", ["OpenAI", "Ollama", "Agnes AI"], horizontal=True)
+    fast_provider = {"OpenAI": "openai", "Ollama": "ollama", "Agnes AI": "agnes"}[fast_provider_label]
 
-    if fast_provider == "openai":
-        fast_model = st.text_input("Fast model (OpenAI)", value=config.DEFAULT_FAST_MODEL)
-        ollama_model = config.DEFAULT_OLLAMA_MODEL
-        ollama_base_url = config.DEFAULT_OLLAMA_BASE_URL
-    else:
+    if fast_provider == "ollama":
         ollama_base_url = st.text_input("Ollama base URL", value=config.DEFAULT_OLLAMA_BASE_URL)
         ollama_model = st.text_input("Ollama model", value=config.DEFAULT_OLLAMA_MODEL)
         fast_model = config.DEFAULT_FAST_MODEL
@@ -49,6 +51,13 @@ with st.sidebar:
             st.success("Ollama reachable")
         else:
             st.warning("Ollama not reachable at this URL")
+    else:
+        fast_model = st.text_input(
+            "Fast model",
+            value=config.DEFAULT_AGNES_MODEL if fast_provider == "agnes" else config.DEFAULT_FAST_MODEL,
+        )
+        ollama_model = config.DEFAULT_OLLAMA_MODEL
+        ollama_base_url = config.DEFAULT_OLLAMA_BASE_URL
 
     st.divider()
     temperature_strong = st.slider("Temperature (strong model)", 0.0, 1.0, 0.2, 0.1)
@@ -59,9 +68,11 @@ with st.sidebar:
     st.divider()
     st.caption(f"OPENAI_API_KEY: {'set' if os.environ.get('OPENAI_API_KEY') else 'NOT SET'}")
     st.caption(f"OPENAI_BASE_URL: {'set' if os.environ.get('OPENAI_BASE_URL') else 'default'}")
+    st.caption(f"AGNES_API_KEY: {'set' if os.environ.get('AGNES_API_KEY') else 'NOT SET'}")
 
 settings = config.Settings(
     strong_model=strong_model,
+    strong_provider=strong_provider,
     fast_provider=fast_provider,
     fast_model=fast_model,
     ollama_model=ollama_model,

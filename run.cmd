@@ -27,8 +27,8 @@ if not defined OPENAI_API_KEY (
     )
 )
 
-echo Launching Codebase Understanding Agent...
-uv run streamlit run app.py
+echo Launching Codebase Understanding Agent on port 8541...
+uv run streamlit run app.py --server.port 8541
 
 echo.
 echo App stopped.

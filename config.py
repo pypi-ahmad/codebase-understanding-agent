@@ -15,6 +15,8 @@ DEFAULT_STRONG_MODEL = os.environ.get("OPENAI_STRONG_MODEL", "gpt-4o")
 DEFAULT_FAST_MODEL = os.environ.get("OPENAI_FAST_MODEL", "gpt-4o-mini")
 DEFAULT_OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 DEFAULT_OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+DEFAULT_AGNES_MODEL = os.environ.get("AGNES_MODEL", "agnes-2.5-flash")
+DEFAULT_AGNES_BASE_URL = os.environ.get("AGNES_BASE_URL", "https://apihub.agnes-ai.com/v1")
 
 IGNORED_DIR_NAMES = {
     ".git", "node_modules", ".venv", "venv", "env", "__pycache__",
@@ -36,7 +38,8 @@ KEY_FILE_PRIORITY = [
 @dataclass
 class Settings:
     strong_model: str = DEFAULT_STRONG_MODEL
-    fast_provider: str = "openai"  # "openai" or "ollama"
+    strong_provider: str = "openai"  # "openai" or "agnes"
+    fast_provider: str = "openai"  # "openai", "ollama", or "agnes"
     fast_model: str = DEFAULT_FAST_MODEL
     ollama_model: str = DEFAULT_OLLAMA_MODEL
     ollama_base_url: str = DEFAULT_OLLAMA_BASE_URL
@@ -56,24 +59,33 @@ def ollama_available(base_url: str = DEFAULT_OLLAMA_BASE_URL, timeout: float = 1
         return False
 
 
-def build_strong_llm(settings: Settings) -> BaseChatModel:
-    """Stronger model for architecture explanation and hard questions."""
+def _build_openai_compatible_llm(
+    model: str, temperature: float, api_key_env: str, base_url: str | None
+) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
 
-    api_key = os.environ.get("OPENAI_API_KEY")
+    api_key = os.environ.get(api_key_env)
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
-    base_url = os.environ.get("OPENAI_BASE_URL") or None
-    return ChatOpenAI(
-        model=settings.strong_model,
-        temperature=settings.temperature_strong,
-        api_key=api_key,
-        base_url=base_url,
+        raise RuntimeError(f"{api_key_env} environment variable is not set.")
+    return ChatOpenAI(model=model, temperature=temperature, api_key=api_key, base_url=base_url)
+
+
+def build_strong_llm(settings: Settings) -> BaseChatModel:
+    """Stronger model for architecture explanation and hard questions."""
+    if settings.strong_provider == "agnes":
+        return _build_openai_compatible_llm(
+            settings.strong_model, settings.temperature_strong, "AGNES_API_KEY", DEFAULT_AGNES_BASE_URL
+        )
+    return _build_openai_compatible_llm(
+        settings.strong_model,
+        settings.temperature_strong,
+        "OPENAI_API_KEY",
+        os.environ.get("OPENAI_BASE_URL") or None,
     )
 
 
 def build_fast_llm(settings: Settings) -> BaseChatModel:
-    """Faster/cheaper model for file summaries and simple Q&A. Ollama if selected."""
+    """Faster/cheaper model for file summaries and simple Q&A. Ollama or Agnes AI if selected."""
     if settings.fast_provider == "ollama":
         from langchain_ollama import ChatOllama
 
@@ -82,16 +94,13 @@ def build_fast_llm(settings: Settings) -> BaseChatModel:
             temperature=settings.temperature_fast,
             base_url=settings.ollama_base_url,
         )
-
-    from langchain_openai import ChatOpenAI
-
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
-    base_url = os.environ.get("OPENAI_BASE_URL") or None
-    return ChatOpenAI(
-        model=settings.fast_model,
-        temperature=settings.temperature_fast,
-        api_key=api_key,
-        base_url=base_url,
+    if settings.fast_provider == "agnes":
+        return _build_openai_compatible_llm(
+            settings.fast_model, settings.temperature_fast, "AGNES_API_KEY", DEFAULT_AGNES_BASE_URL
+        )
+    return _build_openai_compatible_llm(
+        settings.fast_model,
+        settings.temperature_fast,
+        "OPENAI_API_KEY",
+        os.environ.get("OPENAI_BASE_URL") or None,
     )
