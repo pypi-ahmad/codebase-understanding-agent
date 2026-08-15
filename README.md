@@ -89,13 +89,12 @@ Copy `.env.example` to `.env` and fill in your values, **or** set these as real 
 |---|---|---|---|
 | `OPENAI_API_KEY` | If using the OpenAI provider | — | API key for the OpenAI-compatible endpoint. Never hardcoded; read from the environment only. |
 | `OPENAI_BASE_URL` | No | provider default | Base URL for an OpenAI-compatible endpoint (e.g. a proxy or alternate provider). |
-| `OPENAI_STRONG_MODEL` | No | `gpt-4o` | Model used for architecture explanation and hard questions when the strong provider is OpenAI. |
-| `OPENAI_FAST_MODEL` | No | `gpt-4o-mini` | Model used for file summaries and simple questions when the fast provider is OpenAI. |
 | `OLLAMA_BASE_URL` | No | `http://localhost:11434` | Base URL of a local Ollama server, used when the fast provider is set to Ollama. |
-| `OLLAMA_MODEL` | No | `llama3.2` | Ollama model name for the fast tier. |
+| `OLLAMA_MODEL` | No | `llama3.2` | Preferred Ollama model name; pre-selected in the dropdown when present on the server. |
 | `AGNES_API_KEY` | If using the Agnes AI provider | — | API key for the Agnes AI OpenAI-compatible endpoint. Read from the environment only. |
-| `AGNES_MODEL` | No | `agnes-2.5-flash` | Model used (for either tier) when that tier's provider is Agnes AI. |
 | `AGNES_BASE_URL` | No | `https://apihub.agnes-ai.com/v1` | Base URL for the Agnes AI API. |
+
+OpenAI models are fixed to two selectable presets — **GPT-5.6 Luna** and **GPT-5.6 Terra**, both at `medium` reasoning effort — for either tier. Agnes AI is fixed to **agnes-2.5-flash**. Ollama's model list is queried live from the server (`/api/tags`) and offered as a dropdown.
 
 All defaults and overrides can also be changed at runtime from the sidebar.
 
@@ -139,9 +138,9 @@ flowchart LR
 Available in the sidebar, all backed by `config.Settings`:
 
 - **Strong model provider** — OpenAI or Agnes AI (both OpenAI-compatible endpoints).
-- **Strong model name** — model to use for architecture/hard Q&A on the selected provider.
+- **Strong model name** — for OpenAI, a dropdown of the two fixed presets (GPT-5.6 Luna / GPT-5.6 Terra, medium effort); fixed to `agnes-2.5-flash` for Agnes AI.
 - **Fast model provider** — OpenAI, Ollama, or Agnes AI.
-- **Fast model name** — model name for OpenAI/Agnes AI, or Ollama model + base URL.
+- **Fast model name** — same fixed OpenAI presets or Agnes AI model as above, or for Ollama a dropdown populated from the models installed on the target server (+ base URL).
 - **Temperature** — separate sliders for the strong and fast models.
 - **Max files to summarize** — caps how many key files the Summarizer processes.
 - **Keep cloned/extracted files after session** — skip automatic cleanup of temp directories.
