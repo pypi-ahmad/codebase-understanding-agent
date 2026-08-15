@@ -31,19 +31,24 @@ def cleanup_previous(keep: bool) -> None:
 with st.sidebar:
     st.header("Settings")
     st.subheader("Strong model (architecture & hard Q&A)")
-    strong_provider_label = st.radio("Strong provider", ["OpenAI", "Agnes AI"], horizontal=True)
-    strong_provider = "agnes" if strong_provider_label == "Agnes AI" else "openai"
+    strong_provider_label = st.radio("Strong provider", ["OpenAI", "Agnes AI", "Gemini"], horizontal=True)
+    strong_provider = {"OpenAI": "openai", "Agnes AI": "agnes", "Gemini": "gemini"}[strong_provider_label]
     if strong_provider == "agnes":
         strong_model = config.AGNES_MODEL
         st.caption(f"Model: {strong_model} (fixed)")
+    elif strong_provider == "gemini":
+        strong_model_label = st.selectbox("Strong model", list(config.GEMINI_MODEL_OPTIONS.keys()))
+        strong_model = config.GEMINI_MODEL_OPTIONS[strong_model_label]
     else:
         strong_model_label = st.selectbox("Strong model", list(config.OPENAI_MODEL_OPTIONS.keys()))
         strong_model = config.OPENAI_MODEL_OPTIONS[strong_model_label]
 
     st.divider()
     st.subheader("Fast model (summaries & simple Q&A)")
-    fast_provider_label = st.radio("Fast provider", ["OpenAI", "Ollama", "Agnes AI"], horizontal=True)
-    fast_provider = {"OpenAI": "openai", "Ollama": "ollama", "Agnes AI": "agnes"}[fast_provider_label]
+    fast_provider_label = st.radio("Fast provider", ["OpenAI", "Ollama", "Agnes AI", "Gemini"], horizontal=True)
+    fast_provider = {"OpenAI": "openai", "Ollama": "ollama", "Agnes AI": "agnes", "Gemini": "gemini"}[
+        fast_provider_label
+    ]
 
     if fast_provider == "ollama":
         ollama_base_url = st.text_input("Ollama base URL", value=config.DEFAULT_OLLAMA_BASE_URL)
@@ -64,6 +69,9 @@ with st.sidebar:
         if fast_provider == "agnes":
             fast_model = config.AGNES_MODEL
             st.caption(f"Model: {fast_model} (fixed)")
+        elif fast_provider == "gemini":
+            fast_model_label = st.selectbox("Fast model", list(config.GEMINI_MODEL_OPTIONS.keys()))
+            fast_model = config.GEMINI_MODEL_OPTIONS[fast_model_label]
         else:
             fast_model_label = st.selectbox("Fast model", list(config.OPENAI_MODEL_OPTIONS.keys()))
             fast_model = config.OPENAI_MODEL_OPTIONS[fast_model_label]
@@ -80,6 +88,7 @@ with st.sidebar:
     st.caption(f"OPENAI_API_KEY: {'set' if os.environ.get('OPENAI_API_KEY') else 'NOT SET'}")
     st.caption(f"OPENAI_BASE_URL: {'set' if os.environ.get('OPENAI_BASE_URL') else 'default'}")
     st.caption(f"AGNES_API_KEY: {'set' if os.environ.get('AGNES_API_KEY') else 'NOT SET'}")
+    st.caption(f"GOOGLE_API_KEY: {'set' if os.environ.get('GOOGLE_API_KEY') else 'NOT SET'}")
 
 settings = config.Settings(
     strong_model=strong_model,

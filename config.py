@@ -28,6 +28,12 @@ DEFAULT_OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11
 AGNES_MODEL = "agnes-2.5-flash"
 DEFAULT_AGNES_BASE_URL = os.environ.get("AGNES_BASE_URL", "https://apihub.agnes-ai.com/v1")
 
+# Gemini models are fixed to these two presets (selectable in the UI).
+GEMINI_MODEL_OPTIONS = {
+    "Gemini 3.5 Flash Lite": "gemini-3.5-flash-lite",
+    "Gemini 3.7 Flash": "gemini-3.7-flash",
+}
+
 IGNORED_DIR_NAMES = {
     ".git", "node_modules", ".venv", "venv", "env", "__pycache__",
     ".mypy_cache", ".pytest_cache", ".ruff_cache", "dist", "build",
@@ -48,8 +54,8 @@ KEY_FILE_PRIORITY = [
 @dataclass
 class Settings:
     strong_model: str = DEFAULT_STRONG_MODEL
-    strong_provider: str = "openai"  # "openai" or "agnes"
-    fast_provider: str = "openai"  # "openai", "ollama", or "agnes"
+    strong_provider: str = "openai"  # "openai", "agnes", or "gemini"
+    fast_provider: str = "openai"  # "openai", "ollama", "agnes", or "gemini"
     fast_model: str = DEFAULT_FAST_MODEL
     ollama_model: str = DEFAULT_OLLAMA_MODEL
     ollama_base_url: str = DEFAULT_OLLAMA_BASE_URL
@@ -96,12 +102,23 @@ def _build_openai_compatible_llm(
     return ChatOpenAI(model=model, temperature=temperature, api_key=api_key, base_url=base_url, **kwargs)
 
 
+def _build_gemini_llm(model: str, temperature: float) -> BaseChatModel:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY environment variable is not set.")
+    return ChatGoogleGenerativeAI(model=model, temperature=temperature, google_api_key=api_key)
+
+
 def build_strong_llm(settings: Settings) -> BaseChatModel:
     """Stronger model for architecture explanation and hard questions."""
     if settings.strong_provider == "agnes":
         return _build_openai_compatible_llm(
             settings.strong_model, settings.temperature_strong, "AGNES_API_KEY", DEFAULT_AGNES_BASE_URL
         )
+    if settings.strong_provider == "gemini":
+        return _build_gemini_llm(settings.strong_model, settings.temperature_strong)
     return _build_openai_compatible_llm(
         settings.strong_model,
         settings.temperature_strong,
@@ -112,7 +129,7 @@ def build_strong_llm(settings: Settings) -> BaseChatModel:
 
 
 def build_fast_llm(settings: Settings) -> BaseChatModel:
-    """Faster/cheaper model for file summaries and simple Q&A. Ollama or Agnes AI if selected."""
+    """Faster/cheaper model for file summaries and simple Q&A. Ollama, Agnes AI, or Gemini if selected."""
     if settings.fast_provider == "ollama":
         from langchain_ollama import ChatOllama
 
@@ -125,6 +142,8 @@ def build_fast_llm(settings: Settings) -> BaseChatModel:
         return _build_openai_compatible_llm(
             settings.fast_model, settings.temperature_fast, "AGNES_API_KEY", DEFAULT_AGNES_BASE_URL
         )
+    if settings.fast_provider == "gemini":
+        return _build_gemini_llm(settings.fast_model, settings.temperature_fast)
     return _build_openai_compatible_llm(
         settings.fast_model,
         settings.temperature_fast,
