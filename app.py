@@ -33,10 +33,12 @@ with st.sidebar:
     st.subheader("Strong model (architecture & hard Q&A)")
     strong_provider_label = st.radio("Strong provider", ["OpenAI", "Agnes AI"], horizontal=True)
     strong_provider = "agnes" if strong_provider_label == "Agnes AI" else "openai"
-    strong_model = st.text_input(
-        "Strong model",
-        value=config.DEFAULT_AGNES_MODEL if strong_provider == "agnes" else config.DEFAULT_STRONG_MODEL,
-    )
+    if strong_provider == "agnes":
+        strong_model = config.AGNES_MODEL
+        st.caption(f"Model: {strong_model} (fixed)")
+    else:
+        strong_model_label = st.selectbox("Strong model", list(config.OPENAI_MODEL_OPTIONS.keys()))
+        strong_model = config.OPENAI_MODEL_OPTIONS[strong_model_label]
 
     st.divider()
     st.subheader("Fast model (summaries & simple Q&A)")
@@ -45,17 +47,26 @@ with st.sidebar:
 
     if fast_provider == "ollama":
         ollama_base_url = st.text_input("Ollama base URL", value=config.DEFAULT_OLLAMA_BASE_URL)
-        ollama_model = st.text_input("Ollama model", value=config.DEFAULT_OLLAMA_MODEL)
+        available_ollama_models = config.list_ollama_models(ollama_base_url)
         fast_model = config.DEFAULT_FAST_MODEL
-        if config.ollama_available(ollama_base_url):
-            st.success("Ollama reachable")
+        if available_ollama_models:
+            st.success(f"Ollama reachable ({len(available_ollama_models)} model(s) found)")
+            default_index = (
+                available_ollama_models.index(config.DEFAULT_OLLAMA_MODEL)
+                if config.DEFAULT_OLLAMA_MODEL in available_ollama_models
+                else 0
+            )
+            ollama_model = st.selectbox("Ollama model", available_ollama_models, index=default_index)
         else:
-            st.warning("Ollama not reachable at this URL")
+            st.warning("Ollama not reachable at this URL, or no models pulled yet")
+            ollama_model = config.DEFAULT_OLLAMA_MODEL
     else:
-        fast_model = st.text_input(
-            "Fast model",
-            value=config.DEFAULT_AGNES_MODEL if fast_provider == "agnes" else config.DEFAULT_FAST_MODEL,
-        )
+        if fast_provider == "agnes":
+            fast_model = config.AGNES_MODEL
+            st.caption(f"Model: {fast_model} (fixed)")
+        else:
+            fast_model_label = st.selectbox("Fast model", list(config.OPENAI_MODEL_OPTIONS.keys()))
+            fast_model = config.OPENAI_MODEL_OPTIONS[fast_model_label]
         ollama_model = config.DEFAULT_OLLAMA_MODEL
         ollama_base_url = config.DEFAULT_OLLAMA_BASE_URL
 
