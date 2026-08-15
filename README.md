@@ -7,7 +7,7 @@ Repository: [github.com/pypi-ahmad/codebase-understanding-agent](https://github.
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Streamlit](https://img.shields.io/badge/frontend-Streamlit-ff4b4b)
 ![LangGraph](https://img.shields.io/badge/orchestration-LangGraph-1c3c3c)
-![License](https://img.shields.io/badge/license-unspecified-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 ## Features
 
@@ -162,7 +162,7 @@ Available in the sidebar, all backed by `config.Settings`:
 
 ## License
 
-No license file is currently included in this repository. Add a `LICENSE` file (e.g. MIT, Apache-2.0) before distributing this project.
+[MIT](LICENSE)
 
 ## Acknowledgements
 
