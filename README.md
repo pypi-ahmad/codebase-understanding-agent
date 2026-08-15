@@ -17,7 +17,7 @@ Repository: [github.com/pypi-ahmad/codebase-understanding-agent](https://github.
   - **Summarizer** (`summarize_codebase`) — summarizes each key file with the fast model.
   - **Architecture Explainer** (`explain_architecture`) — produces a high-level architecture write-up with the strong model.
   - **Q&A Agent** (`qa_agent`) — answers follow-up questions using the file tree, summaries, and architecture summary as context, with multi-turn chat history.
-- **Model routing** — cheap/fast model (OpenAI or local Ollama) for summarization and simple questions; a stronger OpenAI-compatible model for architecture explanation and harder questions (keyword/length heuristic decides which).
+- **Model routing** — cheap/fast model (OpenAI, local Ollama, Agnes AI, or Gemini) for summarization and simple questions; a stronger model (OpenAI, Agnes AI, or Gemini) for architecture explanation and harder questions (keyword/length heuristic decides which).
 - **Live progress** — each agent step streams to the UI as it completes, and the pipeline stops immediately (with a clear error) if any step fails.
 - **Safe temp-file handling** — GitHub clones and zip extractions land in an isolated temp directory that the app tracks and can delete on demand; local folders are only ever read, never modified or deleted.
 - **One-click launch on Windows** — `run.cmd` syncs dependencies and starts the app with a double-click.
@@ -34,6 +34,7 @@ _No screenshots yet — add a screenshot of the Overview/Architecture/Chat tabs 
 | Agent orchestration | [LangGraph](https://langchain-ai.github.io/langgraph/) |
 | LLM client (OpenAI-compatible) | `langchain-openai` (`ChatOpenAI`) |
 | LLM client (local models) | `langchain-ollama` (`ChatOllama`) |
+| LLM client (Gemini) | `langchain-google-genai` (`ChatGoogleGenerativeAI`) |
 | Repo cloning | `GitPython` |
 | Zip extraction | `zipfile` (stdlib) |
 | Env config | `python-dotenv` |
@@ -93,8 +94,9 @@ Copy `.env.example` to `.env` and fill in your values, **or** set these as real 
 | `OLLAMA_MODEL` | No | `llama3.2` | Preferred Ollama model name; pre-selected in the dropdown when present on the server. |
 | `AGNES_API_KEY` | If using the Agnes AI provider | — | API key for the Agnes AI OpenAI-compatible endpoint. Read from the environment only. |
 | `AGNES_BASE_URL` | No | `https://apihub.agnes-ai.com/v1` | Base URL for the Agnes AI API. |
+| `GOOGLE_API_KEY` | If using the Gemini provider | — | API key for the Gemini Developer API. Read from the environment only. |
 
-OpenAI models are fixed to two selectable presets — **GPT-5.6 Luna** and **GPT-5.6 Terra**, both at `medium` reasoning effort — for either tier. Agnes AI is fixed to **agnes-2.5-flash**. Ollama's model list is queried live from the server (`/api/tags`) and offered as a dropdown.
+OpenAI models are fixed to two selectable presets — **GPT-5.6 Luna** and **GPT-5.6 Terra**, both at `medium` reasoning effort — for either tier. Agnes AI is fixed to **agnes-2.5-flash**. Gemini is fixed to two selectable presets — **Gemini 3.5 Flash Lite** and **Gemini 3.7 Flash**. Ollama's model list is queried live from the server (`/api/tags`) and offered as a dropdown.
 
 All defaults and overrides can also be changed at runtime from the sidebar.
 
@@ -137,10 +139,10 @@ flowchart LR
 
 Available in the sidebar, all backed by `config.Settings`:
 
-- **Strong model provider** — OpenAI or Agnes AI (both OpenAI-compatible endpoints).
-- **Strong model name** — for OpenAI, a dropdown of the two fixed presets (GPT-5.6 Luna / GPT-5.6 Terra, medium effort); fixed to `agnes-2.5-flash` for Agnes AI.
-- **Fast model provider** — OpenAI, Ollama, or Agnes AI.
-- **Fast model name** — same fixed OpenAI presets or Agnes AI model as above, or for Ollama a dropdown populated from the models installed on the target server (+ base URL).
+- **Strong model provider** — OpenAI, Agnes AI (OpenAI-compatible endpoint), or Gemini.
+- **Strong model name** — for OpenAI, a dropdown of the two fixed presets (GPT-5.6 Luna / GPT-5.6 Terra, medium effort); fixed to `agnes-2.5-flash` for Agnes AI; for Gemini, a dropdown of the two fixed presets (Gemini 3.5 Flash Lite / Gemini 3.7 Flash).
+- **Fast model provider** — OpenAI, Ollama, Agnes AI, or Gemini.
+- **Fast model name** — same fixed OpenAI/Gemini presets or Agnes AI model as above, or for Ollama a dropdown populated from the models installed on the target server (+ base URL).
 - **Temperature** — separate sliders for the strong and fast models.
 - **Max files to summarize** — caps how many key files the Summarizer processes.
 - **Keep cloned/extracted files after session** — skip automatic cleanup of temp directories.
