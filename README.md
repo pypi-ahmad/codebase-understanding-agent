@@ -9,6 +9,21 @@ Repository: [github.com/pypi-ahmad/codebase-understanding-agent](https://github.
 ![LangGraph](https://img.shields.io/badge/orchestration-LangGraph-1c3c3c)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+## Contents
+
+- [Features](#features)
+- [Demo / Screenshots](#demo--screenshots)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Installation & Setup](#installation--setup)
+- [Environment Variables](#environment-variables)
+- [Usage](#usage)
+- [How It Works (Architecture)](#how-it-works-architecture)
+- [Configuration Options](#configuration-options)
+- [Examples](#examples)
+- [Future Improvements](#future-improvements)
+- [License](#license)
+
 ## Features
 
 - **Three input sources** — analyze a public GitHub repository URL, a local folder path, or an uploaded `.zip` file.
