@@ -2,12 +2,18 @@
 
 A multi-agent Streamlit app that clones, scans, summarizes, and explains any codebase — then answers questions about it in a chat interface.
 
+Free, open-source, and community-driven — clone it, run it on your own machine with your own API keys, and use it however you like. Bug reports, feature ideas, and pull requests are genuinely welcome; see [Contributing & Community](#contributing--community) below.
+
 Repository: [github.com/pypi-ahmad/codebase-understanding-agent](https://github.com/pypi-ahmad/codebase-understanding-agent)
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Streamlit](https://img.shields.io/badge/frontend-Streamlit-ff4b4b)
 ![LangGraph](https://img.shields.io/badge/orchestration-LangGraph-1c3c3c)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
+
+> [!IMPORTANT]
+> This app sends file content from whatever you point it at to the third-party LLM provider you configure. You run it with your own machine and your own API keys, and **you are fully responsible for the data you process with it.** Read the [Disclaimer](#disclaimer) before analyzing anything sensitive.
 
 ## Contents
 
@@ -17,12 +23,13 @@ Repository: [github.com/pypi-ahmad/codebase-understanding-agent](https://github.
 - [Project Structure](#project-structure)
 - [Installation & Setup](#installation--setup)
 - [Environment Variables](#environment-variables)
-- [Usage](#usage)
-- [How It Works (Architecture)](#how-it-works-architecture)
+- [Usage](#usage) — see also [USAGE.md](USAGE.md) for the full guide
+- [How It Works (Architecture)](#how-it-works-architecture) — see also [ARCHITECTURE.md](ARCHITECTURE.md) for the full deep dive
 - [Configuration Options](#configuration-options)
 - [Examples](#examples)
 - [Future Improvements](#future-improvements)
-- [License](#license)
+- [Contributing & Community](#contributing--community)
+- [Disclaimer](#disclaimer)
 
 ## Features
 
@@ -65,7 +72,7 @@ Codebase Understanding Agent/
 ├── graph.py           # LangGraph state (AgentState) + the analysis graph and Q&A graph
 ├── agents.py          # The 4 node functions: load, explore, summarize, explain, Q&A
 ├── tools.py           # Git clone, zip extraction, local path validation, file tree, file reads
-├── config.py          # Settings dataclass + OpenAI/Ollama LLM factories (env-driven)
+├── config.py          # Settings dataclass + LLM factories for OpenAI, Ollama, Agnes AI, Gemini (env-driven)
 ├── run.cmd            # Windows one-click launcher (uv sync + streamlit run)
 ├── .env.example       # Template for environment variables (copy to .env)
 ├── .gitignore
@@ -75,7 +82,7 @@ Codebase Understanding Agent/
 
 ## Installation & Setup
 
-**Prerequisites:** Python 3.11+, [`uv`](https://docs.astral.sh/uv/getting-started/installation/), and an OpenAI-compatible API key.
+**Prerequisites:** Python 3.11+, [`uv`](https://docs.astral.sh/uv/getting-started/installation/), and an API key for at least one supported provider (OpenAI, Agnes AI, Gemini) — or a local [Ollama](https://ollama.com/) server if you'd rather not use any provider key at all.
 
 ### Windows — one click
 
@@ -96,6 +103,9 @@ uv run streamlit run app.py --server.port 8541
 ```
 
 The app runs on **http://localhost:8541** (`run.cmd` uses the same port).
+
+> [!NOTE]
+> The app launches even without any provider key set — it only fails when you actually click **Analyze Codebase** or send a chat message with a provider that has no key. Set at least one key below before using it for real.
 
 ## Environment Variables
 
@@ -126,6 +136,8 @@ All defaults and overrides can also be changed at runtime from the sidebar.
    - **Chat** tab — ask follow-up questions about the codebase.
 5. When finished, use **Delete cloned/extracted files now** or **Clear session** in the footer to clean up (skipped automatically if "Keep cloned/extracted files after session" is checked).
 
+See **[USAGE.md](USAGE.md)** for a full walkthrough of every source type, sidebar setting, chat routing behavior, and a troubleshooting table mapping each error message to its fix.
+
 ## How It Works (Architecture)
 
 The app runs two small LangGraph graphs against a shared `AgentState` (file tree, key files, summaries, architecture summary, chat history, settings, error).
@@ -149,6 +161,8 @@ flowchart LR
 - `explain_architecture` sends the file tree and all summaries to the strong model for a structured architecture write-up.
 
 **Q&A graph** — a single `qa_agent` node, invoked once per chat message with the file tree, architecture summary, file summaries, and recent chat history as context. A keyword/length heuristic (`agents._choose_qa_model`) picks the strong model for architecture/design/security/performance-flavored or long questions, and the fast model otherwise. `chat_history` uses a LangGraph reducer (`operator.add`) so each turn appends rather than overwrites.
+
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for a fully-cited deep dive: a tech-stack/commands inventory, C4 diagrams, inferred ADRs, and subsystem walkthroughs of the error-propagation state machine, provider routing, and filesystem-safety mechanisms.
 
 ## Configuration Options
 
@@ -175,9 +189,28 @@ Available in the sidebar, all backed by `config.Settings`:
 - Persist analysis results across sessions (currently held only in Streamlit session state).
 - Add automated tests for the graph nodes and tools.
 
-## License
+## Contributing & Community
 
-[MIT](LICENSE)
+This project is free, open-source, and welcomes contributions of all sizes — bug reports, feature suggestions, documentation fixes, and code. It's maintained in spare time with no formal process, so don't overthink it: open an issue or a pull request.
+
+| Resource | Purpose |
+| --- | --- |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup, project layout, coding style, and how to submit a PR |
+| [Issues](https://github.com/pypi-ahmad/codebase-understanding-agent/issues) | Bug reports and feature requests (templates provided for both) |
+| [SUPPORT.md](SUPPORT.md) | Where to ask usage questions and what response time to expect |
+| [SECURITY.md](SECURITY.md) | How to report a security issue privately |
+
+> [!NOTE]
+> This project does not want or accept donations, sponsorships, or any other financial support, and never will. It's free to use and free to modify. If you'd like to give back, the most valuable thing you can do is contribute code, tests, docs, or a well-written bug report.
+
+## Disclaimer
+
+- **You run this on your own machine, with your own API keys.** There is no hosted version and no account system.
+- **You are 100% responsible for the data you process with it.** Whatever you point the app at (a GitHub repo, a local folder, or a zip) gets its file content sent to whichever LLM provider you configure — make sure you're allowed to share that content with a third party before you do.
+- **AI-generated output can be wrong.** Summaries, architecture explanations, and chat answers are all LLM output and are not verified for correctness by this project.
+- **No warranty, no liability**, per the [MIT License](LICENSE) — use it at your own risk.
+
+See [DISCLAIMER.md](DISCLAIMER.md) for the full version, including how to keep everything fully local (Ollama).
 
 ## Acknowledgements
 
