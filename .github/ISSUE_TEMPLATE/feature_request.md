@@ -6,7 +6,7 @@ labels: enhancement
 assignees: ''
 ---
 
-Thanks for the suggestion! Check the [Future Improvements](../../README.md#future-improvements) list first in case it's already on the radar — feel free to open this anyway if you want to add detail or a different angle.
+Thanks for the suggestion! Check the [Future improvements](../../README.md#future-improvements) list first in case it's already on the radar; feel free to open this anyway if you want to add detail or a different angle.
 
 ## What problem does this solve?
 

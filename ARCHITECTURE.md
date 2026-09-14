@@ -1,10 +1,10 @@
 # Codebase Understanding Agent — Architecture
 
-**Snapshot:** remote `https://github.com/pypi-ahmad/codebase-understanding-agent.git`, branch `main`, HEAD `491a1864ee78cbb7b935bbb7f51e3b918b8ae985` ("docs: add table of contents to README"). This document describes exactly that snapshot; re-verify against `git log -1` if the tree has moved on.
+**Snapshot:** remote `https://github.com/pypi-ahmad/codebase-understanding-agent.git`, branch `main`, HEAD `491a1864ee78cbb7b935bbb7f51e3b918b8ae985` ("docs: add table of contents to README"). This document describes exactly that snapshot; re-verify against `git log -1` if the tree has moved on since.
 
 ---
 
-## Part 1 — Whole-repo technical deep-dive
+## Part 1: Whole-repo technical deep-dive
 
 ### What this is
 
@@ -30,7 +30,7 @@ A single-page Streamlit app that takes a codebase (GitHub URL, local folder, or 
 - **UI entry point:** `app.py`, run via `streamlit run app.py` (README.md:80). No CLI, no API server — this is a single Streamlit script, not a package with a `[project.scripts]` entry (pyproject.toml has none).
 - **Windows launcher:** `run.cmd` — checks for `uv` on `PATH`, runs `uv sync`, warns (but still launches) if no `OPENAI_API_KEY`/`.env` is found, then runs `streamlit run app.py --server.port 8541` (run.cmd:5-31).
 
-### Commands & Verification Inventory
+### Commands & verification inventory
 
 | Command | Purpose | Evidence |
 | --- | --- | --- |
@@ -56,7 +56,7 @@ Codebase Understanding Agent/
 ```
 (README.md:47-59, confirmed against `ls` output.)
 
-### Deployment & Runtime Surface
+### Deployment & runtime surface
 
 There is no containerization (no `Dockerfile`), no CI runner pin, no serverless config. The only runtime pins are:
 
@@ -81,7 +81,7 @@ All pinned dependencies (`langchain-core`, `langchain-google-genai`, `langchain-
 
 ---
 
-## Part 2 — Context & ecosystem
+## Part 2: Context & ecosystem
 
 ### Identity
 
@@ -110,7 +110,7 @@ Standalone tool; no sibling repos or shared build tags visible on disk.
 
 ---
 
-## Part 3 — Architectural blueprint
+## Part 3: Architectural blueprint
 
 ### Layering and dependency rules
 
@@ -125,7 +125,7 @@ config.py  ←────────────────┘
 - `tools.py` depends on `config.py` only for two constants (`IGNORED_DIR_NAMES`, `KEY_FILE_PRIORITY`, tools.py:11) — it has no LangChain/LangGraph import and could be unit-tested in isolation without any LLM dependency.
 - Nothing enforces this layering mechanically (no lint rule, no import-boundary check) — it is convention only, readable directly from the import statements at the top of each file.
 
-### C4 — Level 1: System context
+### C4 level 1: System context
 
 ```mermaid
 flowchart LR
@@ -137,7 +137,7 @@ flowchart LR
 ```
 (README.md:14-23; config.py:96-153.)
 
-### C4 — Level 2: Containers
+### C4 level 2: Containers
 
 ```mermaid
 flowchart TB
@@ -154,7 +154,7 @@ flowchart TB
     UI --> Tools
 ```
 
-### C4 — Level 3: Analysis-run lifecycle
+### C4 level 3: Analysis-run lifecycle
 
 ```mermaid
 sequenceDiagram
@@ -193,7 +193,7 @@ sequenceDiagram
 ### Inferred ADRs
 
 #### ADR: Two separate LangGraph graphs instead of one
-- **Context:** the app has two distinct interaction shapes — a one-shot multi-step pipeline (analyze) and a repeated single-step interaction (chat).
+- **Context:** the app has two distinct interaction shapes: a one-shot multi-step pipeline (analyze) and a repeated single-step interaction (chat).
 - **Decision:** `build_analysis_graph()` is a 4-node linear pipeline with error short-circuiting; `build_qa_graph()` is a single `qa_agent` node, rebuilt on every chat message (graph.py:39-65, app.py:225).
 - **Alternatives considered:** one graph with a conditional loop back to a Q&A node. Rejected implicitly — the two concerns have unrelated state needs (Q&A doesn't need to re-run explore/summarize) and separating them keeps each graph trivially easy to reason about.
 - **Consequences:** `build_qa_graph()` is called fresh per message rather than persisted (app.py:225) — cheap here since it's a single-node graph with no compile-time cost of note, but would need revisiting if the Q&A graph ever grew nodes.
@@ -224,7 +224,7 @@ Based on how Gemini was added (visible as the most recent provider in the git hi
 4. Add the provider to the sidebar radio and the corresponding branch in `app.py` (app.py:34-35, 48-51).
 5. Document the new env var in `.env.example` and README's Environment Variables table.
 
-**Common pitfall:** `Settings.fast_provider`/`strong_provider` are plain strings compared with `==` in `config.py` (e.g. `if settings.strong_provider == "agnes":`, config.py:116) — a typo'd provider string silently falls through to the OpenAI branch (the `else`/final-return path in both `build_strong_llm` and `build_fast_llm`) rather than raising. A new provider must be spelled identically everywhere it's compared.
+Common pitfall: `Settings.fast_provider`/`strong_provider` are plain strings compared with `==` in `config.py` (e.g. `if settings.strong_provider == "agnes":`, config.py:116) — a typo'd provider string silently falls through to the OpenAI branch (the `else`/final-return path in both `build_strong_llm` and `build_fast_llm`) rather than raising. A new provider must be spelled identically everywhere it's compared.
 
 ---
 
@@ -282,7 +282,7 @@ All three fail closed (raise or no-op) rather than fail open, which is the corre
 
 ---
 
-## Footnotes — local file citations
+## Footnotes: local file citations
 
 - `README.md` — feature list, tech stack, project structure, usage, existing architecture summary, known future work.
 - `pyproject.toml` / `uv.lock` — dependencies, Python version floor, absence of dev/test/lint tooling.
