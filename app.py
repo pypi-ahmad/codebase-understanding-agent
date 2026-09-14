@@ -1,4 +1,15 @@
-"""Streamlit UI for the Codebase Understanding Agent."""
+"""Streamlit UI for the Codebase Understanding Agent.
+
+Streamlit re-executes this entire module from top to bottom on every user interaction
+(button click, widget change, chat submit). Settings is therefore rebuilt from sidebar
+widget values on every rerun — it is not cached between interactions.
+
+Must not: contain business logic beyond UI wiring. Graph execution, filesystem I/O, and
+LLM calls are delegated to graph.py / agents.py / tools.py.
+
+Read next: graph.py for the LangGraph state machine, then agents.py for the node
+implementations.
+"""
 
 from __future__ import annotations
 
@@ -19,6 +30,9 @@ if "temp_dir_info" not in st.session_state:
 
 
 def cleanup_previous(keep: bool) -> None:
+    # Called before starting a new analysis to release the previous session's temp dir.
+    # Local-folder analyses never populate temp_dir_info, so this is always a no-op for
+    # them. cleanup_temp_dir itself guards against deleting anything outside TEMP_ROOT.
     info = st.session_state.temp_dir_info
     if info and not keep:
         path, src_type = info
@@ -160,6 +174,8 @@ if analyze_clicked:
         with st.status("Running agents...", expanded=True) as status:
             try:
                 analysis_graph = build_analysis_graph()
+                # stream() yields one dict per completed node; each dict maps node_name
+                # to the partial-state update that node returned.
                 for chunk in analysis_graph.stream(initial_state):
                     for node_name, update in chunk.items():
                         label = step_labels.get(node_name, node_name)
@@ -231,6 +247,8 @@ if state:
                 else:
                     st.markdown(result["answer"])
                     st.caption(f"model used: {result.get('used_model', 'fast')}")
+                    # state is a reference into session_state.analysis_state, so this
+                    # mutation persists the accumulated history across subsequent messages.
                     state["chat_history"] = result["chat_history"]
 
     st.divider()
