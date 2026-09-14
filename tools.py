@@ -1,4 +1,14 @@
-"""Filesystem tools: clone GitHub repos, extract zips, scan local folders."""
+"""Filesystem tools: clone GitHub repos, extract zips, scan local folders.
+
+Responsibilities: all filesystem I/O that touches user-supplied paths or temp
+directories. This module has no LangChain or LangGraph imports, making it the only
+part of the codebase that can be unit-tested without an LLM dependency.
+
+Must not: import agents.py or graph.py. It imports only two constants from config.py
+(IGNORED_DIR_NAMES, KEY_FILE_PRIORITY).
+
+Read next: agents.py to see how these functions are called inside the LangGraph nodes.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +24,11 @@ GITHUB_URL_RE = re.compile(
     r"^https://github\.com/[\w.\-]+/[\w.\-]+(?:\.git)?/?$"
 )
 
+# Fixed per OS user account — shared across all concurrent Streamlit sessions from the
+# same machine. Each analysis creates its own mkdtemp() subdirectory inside here, but
+# cleanup_temp_dir cannot distinguish between sessions if an incorrect path is ever
+# passed (see that function's comment). In the expected single-session-per-tab usage
+# this is moot.
 TEMP_ROOT = Path(tempfile.gettempdir()) / "codebase_understanding_agent"
 
 
@@ -31,7 +46,12 @@ def validate_github_url(url: str) -> str:
 
 
 def clone_repo(url: str) -> Path:
-    """Shallow-clone a public GitHub repo into a fresh temp dir."""
+    """Shallow-clone a public GitHub repo into a fresh temp dir.
+
+    Clones with depth=1 (HEAD commit only, no history). The URL is validated against
+    GITHUB_URL_RE before git ever sees it — git never receives an untrusted raw string.
+    Cleanup on clone failure is best-effort (rmtree with ignore_errors).
+    """
     import git  # GitPython
 
     url = validate_github_url(url)
@@ -71,6 +91,9 @@ def extract_zip(zip_bytes: bytes, original_name: str = "upload.zip") -> Path:
 
     try:
         with zipfile.ZipFile(zip_path) as zf:
+            # Zip-slip guard: resolve every member's destination path before calling
+            # extractall. A crafted zip with "../" components could otherwise write
+            # files outside dest to arbitrary locations on the host.
             for member in zf.infolist():
                 member_path = (dest / member.filename).resolve()
                 if not str(member_path).startswith(str(dest.resolve())):
@@ -127,6 +150,9 @@ def build_file_tree(root: Path, max_depth: int = 4, max_entries: int = 800) -> t
 
 
 def identify_key_files(files: list[Path], root: Path, max_files: int) -> list[dict]:
+    # Lower tuple → higher rank. Primary: KEY_FILE_PRIORITY position (unlisted files
+    # rank after all named entries; .md files get a smaller penalty than other unlisted
+    # types). Secondary: directory depth (shallower first). Tertiary: alphabetical path.
     def score(path: Path) -> tuple[int, int, str]:
         rel = path.relative_to(root)
         name = path.name.lower()
@@ -153,7 +179,13 @@ def read_file_text(path: Path, max_chars: int = 6000) -> str:
 
 
 def cleanup_temp_dir(path: Path | str | None) -> None:
-    """Delete a temp clone/extract dir. Refuses to touch anything outside TEMP_ROOT."""
+    """Delete a temp clone/extract dir. Refuses to touch anything outside TEMP_ROOT.
+
+    The .relative_to() call raises ValueError for any path not under TEMP_ROOT; the
+    except clause silently returns. This is what makes this function safe to call with
+    a local-folder path — local folders are never copied into TEMP_ROOT, so the check
+    always rejects them without a special-case branch.
+    """
     if not path:
         return
     path = Path(path).resolve()

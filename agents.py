@@ -1,4 +1,15 @@
-"""The four agent nodes: load, explore, summarize, explain, and Q&A."""
+"""The four agent nodes: load, explore, summarize, explain, and Q&A.
+
+Responsibilities: the only module that instantiates LLM clients and calls .invoke().
+Each node accepts a plain dict (AgentState) and returns a plain dict of partial-state
+updates so the nodes can be unit-tested without a running LangGraph instance.
+
+Error contract: on failure a node returns {"error": "<message>"} and exits early;
+on success it returns its output fields with "error" absent. graph._route_on_error
+reads this field to decide whether to continue to the next node or short-circuit to END.
+
+Read next: graph.py to see how these nodes are wired into the two StateGraphs.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +21,8 @@ import config
 import tools
 from tools import ToolError
 
+# Matched as substrings on the lowercased question string, not as whole words.
+# "why is" matches "why isn't this scalable" and "why is this designed this way".
 QA_STRONG_KEYWORDS = [
     "architecture", "design pattern", "design decision", "why does", "why is",
     "trade-off", "tradeoff", "scalab", "refactor", "compare", "pros and cons",
@@ -60,6 +73,8 @@ def summarize_codebase_node(state: dict) -> dict:
     for kf in state["key_files"]:
         rel_path = kf["path"]
         content = tools.read_file_text(Path(kf["abs_path"]), settings.max_file_chars)
+        # Per-file failures are captured as the summary value — one unreadable or
+        # LLM-erroring file does not abort the whole node or set state["error"].
         try:
             resp = llm.invoke([
                 SystemMessage(content=(
@@ -137,6 +152,7 @@ def qa_agent_node(state: dict) -> dict:
         "You answer questions about a specific codebase using only the provided "
         "context. If the context doesn't contain the answer, say so plainly."
     ))]
+    # Only the last 6 history turns are sent to the LLM to bound prompt size.
     for role, content in state.get("chat_history", [])[-6:]:
         messages.append(HumanMessage(content=content) if role == "user" else AIMessage(content=content))
     messages.append(HumanMessage(content=f"Context:\n{context}\n\nQuestion: {question}"))

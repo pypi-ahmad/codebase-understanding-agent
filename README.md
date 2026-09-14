@@ -1,8 +1,8 @@
 # Codebase Understanding Agent
 
-A multi-agent Streamlit app that clones, scans, summarizes, and explains any codebase — then answers questions about it in a chat interface.
+A multi-agent Streamlit app that clones, scans, summarizes, and explains any codebase, then answers questions about it in a chat interface.
 
-Free, open-source, and community-driven — clone it, run it on your own machine with your own API keys, and use it however you like. Bug reports, feature ideas, and pull requests are genuinely welcome; see [Contributing & Community](#contributing--community) below.
+Free, open-source, and community-driven. Clone it, run it on your own machine with your own API keys, and use it however you like. Bug reports, feature ideas, and pull requests are genuinely welcome; see [Contributing & Community](#contributing--community) below.
 
 Repository: [github.com/pypi-ahmad/codebase-understanding-agent](https://github.com/pypi-ahmad/codebase-understanding-agent)
 
@@ -18,37 +18,37 @@ Repository: [github.com/pypi-ahmad/codebase-understanding-agent](https://github.
 ## Contents
 
 - [Features](#features)
-- [Demo / Screenshots](#demo--screenshots)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Installation & Setup](#installation--setup)
-- [Environment Variables](#environment-variables)
-- [Usage](#usage) — see also [USAGE.md](USAGE.md) for the full guide
-- [How It Works (Architecture)](#how-it-works-architecture) — see also [ARCHITECTURE.md](ARCHITECTURE.md) for the full deep dive
-- [Configuration Options](#configuration-options)
+- [Demo / screenshots](#demo--screenshots)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Installation & setup](#installation--setup)
+- [Environment variables](#environment-variables)
+- [Usage](#usage) (see also [USAGE.md](USAGE.md) for the full guide)
+- [How it works (architecture)](#how-it-works-architecture) (see also [ARCHITECTURE.md](ARCHITECTURE.md) for the full deep dive)
+- [Configuration options](#configuration-options)
 - [Examples](#examples)
-- [Future Improvements](#future-improvements)
-- [Contributing & Community](#contributing--community)
+- [Future improvements](#future-improvements)
+- [Contributing & community](#contributing--community)
 - [Disclaimer](#disclaimer)
 
 ## Features
 
-- **Three input sources** — analyze a public GitHub repository URL, a local folder path, or an uploaded `.zip` file.
+- **Three input sources**: analyze a public GitHub repository URL, a local folder path, or an uploaded `.zip` file.
 - **Four specialized agents**, orchestrated as a LangGraph state graph:
-  - **Explorer** (`load_codebase` + `explore_structure`) — clones/extracts/validates the source and builds a file tree, identifying key files by priority (README, manifests, entry points, configs).
-  - **Summarizer** (`summarize_codebase`) — summarizes each key file with the fast model.
-  - **Architecture Explainer** (`explain_architecture`) — produces a high-level architecture write-up with the strong model.
-  - **Q&A Agent** (`qa_agent`) — answers follow-up questions using the file tree, summaries, and architecture summary as context, with multi-turn chat history.
-- **Model routing** — cheap/fast model (OpenAI, local Ollama, Agnes AI, or Gemini) for summarization and simple questions; a stronger model (OpenAI, Agnes AI, or Gemini) for architecture explanation and harder questions (keyword/length heuristic decides which).
-- **Live progress** — each agent step streams to the UI as it completes, and the pipeline stops immediately (with a clear error) if any step fails.
-- **Safe temp-file handling** — GitHub clones and zip extractions land in an isolated temp directory that the app tracks and can delete on demand; local folders are only ever read, never modified or deleted.
-- **One-click launch on Windows** — `run.cmd` syncs dependencies and starts the app with a double-click.
+  - **Explorer** (`load_codebase` + `explore_structure`): clones/extracts/validates the source and builds a file tree, identifying key files by priority (README, manifests, entry points, configs).
+  - **Summarizer** (`summarize_codebase`): summarizes each key file with the fast model.
+  - **Architecture Explainer** (`explain_architecture`): produces a high-level architecture write-up with the strong model.
+  - **Q&A Agent** (`qa_agent`): answers follow-up questions using the file tree, summaries, and architecture summary as context, with multi-turn chat history.
+- **Model routing**: cheap/fast model (OpenAI, local Ollama, Agnes AI, or Gemini) for summarization and simple questions; a stronger model (OpenAI, Agnes AI, or Gemini) for architecture explanation and harder questions (keyword/length heuristic decides which).
+- **Live progress**: each agent step streams to the UI as it completes, and the pipeline stops immediately (with a clear error) if any step fails.
+- **Safe temp-file handling**: GitHub clones and zip extractions land in an isolated temp directory that the app tracks and can delete on demand; local folders are only ever read, never modified or deleted.
+- **One-click launch on Windows**: `run.cmd` syncs dependencies and starts the app with a double-click.
 
-## Demo / Screenshots
+## Demo / screenshots
 
 _No screenshots yet — add a screenshot of the Overview/Architecture/Chat tabs here (e.g. `docs/screenshot.png`)._
 
-## Tech Stack
+## Tech stack
 
 | Concern | Library |
 |---|---|
@@ -64,7 +64,7 @@ _No screenshots yet — add a screenshot of the Overview/Architecture/Chat tabs 
 
 Requires Python **3.11+**.
 
-## Project Structure
+## Project structure
 
 ```
 Codebase Understanding Agent/
@@ -80,9 +80,9 @@ Codebase Understanding Agent/
 └── uv.lock            # Locked dependency versions
 ```
 
-## Installation & Setup
+## Installation & setup
 
-**Prerequisites:** Python 3.11+, [`uv`](https://docs.astral.sh/uv/getting-started/installation/), and an API key for at least one supported provider (OpenAI, Agnes AI, Gemini) — or a local [Ollama](https://ollama.com/) server if you'd rather not use any provider key at all.
+**Prerequisites:** Python 3.11+, [`uv`](https://docs.astral.sh/uv/getting-started/installation/), and an API key for at least one supported provider (OpenAI, Agnes AI, Gemini), or a local [Ollama](https://ollama.com/) server if you'd rather not use any provider key at all.
 
 ### Windows — one click
 
@@ -102,14 +102,14 @@ Set your credentials (see [Environment Variables](#environment-variables)), then
 uv run streamlit run app.py --server.port 8541
 ```
 
-The app runs on **http://localhost:8541** (`run.cmd` uses the same port).
+The app runs on `http://localhost:8541` (`run.cmd` uses the same port).
 
 > [!NOTE]
 > The app launches even without any provider key set — it only fails when you actually click **Analyze Codebase** or send a chat message with a provider that has no key. Set at least one key below before using it for real.
 
-## Environment Variables
+## Environment variables
 
-Copy `.env.example` to `.env` and fill in your values, **or** set these as real system environment variables (system variables always take precedence over `.env`).
+Copy `.env.example` to `.env` and fill in your values, or set these as real system environment variables (system variables always take precedence over `.env`).
 
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
@@ -121,7 +121,7 @@ Copy `.env.example` to `.env` and fill in your values, **or** set these as real 
 | `AGNES_BASE_URL` | No | `https://apihub.agnes-ai.com/v1` | Base URL for the Agnes AI API. |
 | `GOOGLE_API_KEY` | If using the Gemini provider | — | API key for the Gemini Developer API. Read from the environment only. |
 
-OpenAI models are fixed to two selectable presets — **GPT-5.6 Luna** and **GPT-5.6 Terra**, both at `medium` reasoning effort — for either tier. Agnes AI is fixed to **agnes-2.5-flash**. Gemini is fixed to two selectable presets — **Gemini 3.5 Flash Lite** and **Gemini 3.7 Flash**. Ollama's model list is queried live from the server (`/api/tags`) and offered as a dropdown.
+OpenAI models are fixed to two selectable presets, `GPT-5.6 Luna` and `GPT-5.6 Terra`, both at `medium` reasoning effort, for either tier. Agnes AI is fixed to `agnes-2.5-flash`. Gemini is fixed to two selectable presets, `Gemini 3.5 Flash Lite` and `Gemini 3.7 Flash`. Ollama's model list is queried live from the server (`/api/tags`) and offered as a dropdown.
 
 All defaults and overrides can also be changed at runtime from the sidebar.
 
@@ -136,13 +136,13 @@ All defaults and overrides can also be changed at runtime from the sidebar.
    - **Chat** tab — ask follow-up questions about the codebase.
 5. When finished, use **Delete cloned/extracted files now** or **Clear session** in the footer to clean up (skipped automatically if "Keep cloned/extracted files after session" is checked).
 
-See **[USAGE.md](USAGE.md)** for a full walkthrough of every source type, sidebar setting, chat routing behavior, and a troubleshooting table mapping each error message to its fix.
+See [USAGE.md](USAGE.md) for a full walkthrough of every source type, sidebar setting, chat routing behavior, and a troubleshooting table mapping each error message to its fix.
 
-## How It Works (Architecture)
+## How it works (architecture)
 
 The app runs two small LangGraph graphs against a shared `AgentState` (file tree, key files, summaries, architecture summary, chat history, settings, error).
 
-**Analysis graph** — runs once per "Analyze Codebase" click, short-circuiting to `END` if any step sets an error:
+Analysis graph: runs once per "Analyze Codebase" click, short-circuiting to `END` if any step sets an error:
 
 ```mermaid
 flowchart LR
@@ -160,21 +160,21 @@ flowchart LR
 - `summarize_codebase` sends each key file's (truncated) content to the fast model for a short summary.
 - `explain_architecture` sends the file tree and all summaries to the strong model for a structured architecture write-up.
 
-**Q&A graph** — a single `qa_agent` node, invoked once per chat message with the file tree, architecture summary, file summaries, and recent chat history as context. A keyword/length heuristic (`agents._choose_qa_model`) picks the strong model for architecture/design/security/performance-flavored or long questions, and the fast model otherwise. `chat_history` uses a LangGraph reducer (`operator.add`) so each turn appends rather than overwrites.
+Q&A graph: a single `qa_agent` node, invoked once per chat message with the file tree, architecture summary, file summaries, and recent chat history as context. A keyword/length heuristic (`agents._choose_qa_model`) picks the strong model for architecture/design/security/performance-flavored or long questions, and the fast model otherwise. `chat_history` uses a LangGraph reducer (`operator.add`) so each turn appends rather than overwrites.
 
-See **[ARCHITECTURE.md](ARCHITECTURE.md)** for a fully-cited deep dive: a tech-stack/commands inventory, C4 diagrams, inferred ADRs, and subsystem walkthroughs of the error-propagation state machine, provider routing, and filesystem-safety mechanisms.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for a fully-cited deep dive: a tech-stack/commands inventory, C4 diagrams, inferred ADRs, and subsystem walkthroughs of the error-propagation state machine, provider routing, and filesystem-safety mechanisms.
 
-## Configuration Options
+## Configuration options
 
 Available in the sidebar, all backed by `config.Settings`:
 
-- **Strong model provider** — OpenAI, Agnes AI (OpenAI-compatible endpoint), or Gemini.
-- **Strong model name** — for OpenAI, a dropdown of the two fixed presets (GPT-5.6 Luna / GPT-5.6 Terra, medium effort); fixed to `agnes-2.5-flash` for Agnes AI; for Gemini, a dropdown of the two fixed presets (Gemini 3.5 Flash Lite / Gemini 3.7 Flash).
-- **Fast model provider** — OpenAI, Ollama, Agnes AI, or Gemini.
-- **Fast model name** — same fixed OpenAI/Gemini presets or Agnes AI model as above, or for Ollama a dropdown populated from the models installed on the target server (+ base URL).
-- **Temperature** — separate sliders for the strong and fast models.
-- **Max files to summarize** — caps how many key files the Summarizer processes.
-- **Keep cloned/extracted files after session** — skip automatic cleanup of temp directories.
+- **Strong model provider**: OpenAI, Agnes AI (OpenAI-compatible endpoint), or Gemini.
+- **Strong model name**: for OpenAI, a dropdown of the two fixed presets (GPT-5.6 Luna / GPT-5.6 Terra, medium effort); fixed to `agnes-2.5-flash` for Agnes AI; for Gemini, a dropdown of the two fixed presets (Gemini 3.5 Flash Lite / Gemini 3.7 Flash).
+- **Fast model provider**: OpenAI, Ollama, Agnes AI, or Gemini.
+- **Fast model name**: same fixed OpenAI/Gemini presets or Agnes AI model as above, or for Ollama a dropdown populated from the models installed on the target server (+ base URL).
+- **Temperature**: separate sliders for the strong and fast models.
+- **Max files to summarize**: caps how many key files the Summarizer processes.
+- **Keep cloned/extracted files after session**: skip automatic cleanup of temp directories.
 
 ## Examples
 
@@ -182,16 +182,16 @@ Available in the sidebar, all backed by `config.Settings`:
 - Point **Local Folder** at a project on disk to get a file tree and architecture summary without cloning anything.
 - Zip up a project you don't have in Git and drop it into **Upload Zip** for the same analysis.
 
-## Future Improvements
+## Future improvements
 
 - Parallelize per-file summarization instead of the current sequential loop.
 - Replace the keyword/length Q&A routing heuristic with a lightweight intent classifier.
 - Persist analysis results across sessions (currently held only in Streamlit session state).
 - Add automated tests for the graph nodes and tools.
 
-## Contributing & Community
+## Contributing & community
 
-This project is free, open-source, and welcomes contributions of all sizes — bug reports, feature suggestions, documentation fixes, and code. It's maintained in spare time with no formal process, so don't overthink it: open an issue or a pull request.
+This project is free, open-source, and welcomes contributions of all sizes: bug reports, feature suggestions, documentation fixes, and code. It's maintained in spare time with no formal process, so don't overthink it. Open an issue or a pull request.
 
 | Resource | Purpose |
 | --- | --- |
@@ -208,7 +208,7 @@ This project is free, open-source, and welcomes contributions of all sizes — b
 - **You run this on your own machine, with your own API keys.** There is no hosted version and no account system.
 - **You are 100% responsible for the data you process with it.** Whatever you point the app at (a GitHub repo, a local folder, or a zip) gets its file content sent to whichever LLM provider you configure — make sure you're allowed to share that content with a third party before you do.
 - **AI-generated output can be wrong.** Summaries, architecture explanations, and chat answers are all LLM output and are not verified for correctness by this project.
-- **No warranty, no liability**, per the [MIT License](LICENSE) — use it at your own risk.
+- **No warranty, no liability**, per the [MIT License](LICENSE). Use it at your own risk.
 
 See [DISCLAIMER.md](DISCLAIMER.md) for the full version, including how to keep everything fully local (Ollama).
 

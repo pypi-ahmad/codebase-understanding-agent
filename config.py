@@ -1,4 +1,16 @@
-"""Environment-driven settings and LLM factory. No hardcoded keys."""
+"""Environment-driven settings and LLM factory. No hardcoded keys.
+
+Responsibilities: define the Settings dataclass, hold module-level constants that
+tools.py imports directly (IGNORED_DIR_NAMES, KEY_FILE_PRIORITY), and construct
+LangChain LLM clients from environment variables at call time — not at import time.
+The only side effect on import is load_dotenv().
+
+Must not: hardcode API keys, base URLs, or model names as literal values outside the
+named constants/dataclass defaults.
+
+Read next: agents.py, which is the only module that calls build_strong_llm /
+build_fast_llm and actually invokes the LLM clients.
+"""
 
 from __future__ import annotations
 
@@ -62,6 +74,7 @@ class Settings:
     temperature_strong: float = 0.2
     temperature_fast: float = 0.1
     max_files: int = 12
+    # Hard cap passed to tools.read_file_text; not exposed in the sidebar UI.
     max_file_chars: int = 6000
     keep_after: bool = False
     error: str | None = field(default=None, repr=False)
@@ -76,7 +89,12 @@ def ollama_available(base_url: str = DEFAULT_OLLAMA_BASE_URL, timeout: float = 1
 
 
 def list_ollama_models(base_url: str = DEFAULT_OLLAMA_BASE_URL, timeout: float = 2.0) -> list[str]:
-    """Return the names of models the user has pulled into their local Ollama server."""
+    """Return the names of models the user has pulled into their local Ollama server.
+
+    Called on every Streamlit rerun while the Ollama fast-provider radio is selected —
+    not cached. Any network or JSON failure returns an empty list (Ollama treated as
+    unreachable).
+    """
     try:
         url = f"{base_url.rstrip('/')}/api/tags"
         with urllib.request.urlopen(url, timeout=timeout) as resp:
@@ -86,6 +104,9 @@ def list_ollama_models(base_url: str = DEFAULT_OLLAMA_BASE_URL, timeout: float =
         return []
 
 
+# Agnes AI exposes an OpenAI-compatible endpoint, so it routes through this same
+# function — the caller passes AGNES_API_KEY and DEFAULT_AGNES_BASE_URL instead
+# of OpenAI's equivalents.
 def _build_openai_compatible_llm(
     model: str,
     temperature: float,
@@ -112,7 +133,12 @@ def _build_gemini_llm(model: str, temperature: float) -> BaseChatModel:
 
 
 def build_strong_llm(settings: Settings) -> BaseChatModel:
-    """Stronger model for architecture explanation and hard questions."""
+    """Stronger model for architecture explanation and hard questions.
+
+    An unrecognized provider string silently falls through to the OpenAI branch (the
+    final return) rather than raising — the failure surfaces only when the LLM is
+    actually invoked and OPENAI_API_KEY is absent.
+    """
     if settings.strong_provider == "agnes":
         return _build_openai_compatible_llm(
             settings.strong_model, settings.temperature_strong, "AGNES_API_KEY", DEFAULT_AGNES_BASE_URL
@@ -129,7 +155,10 @@ def build_strong_llm(settings: Settings) -> BaseChatModel:
 
 
 def build_fast_llm(settings: Settings) -> BaseChatModel:
-    """Faster/cheaper model for file summaries and simple Q&A. Ollama, Agnes AI, or Gemini if selected."""
+    """Faster/cheaper model for file summaries and simple Q&A. Ollama, Agnes AI, or Gemini if selected.
+
+    Same silent-fallthrough behavior as build_strong_llm for unrecognized provider strings.
+    """
     if settings.fast_provider == "ollama":
         from langchain_ollama import ChatOllama
 
